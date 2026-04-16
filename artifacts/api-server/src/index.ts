@@ -25,13 +25,12 @@ app.listen(port, async (err) => {
 
   logger.info({ port }, "Server listening");
 
-  if (process.env.NODE_ENV !== "production") {
-    try {
-      await seedDatabase();
-      logger.info("Database seeding complete");
-    } catch (seedErr) {
-      logger.error({ err: seedErr }, "Database seeding failed");
-    }
+  try {
+    const isDev = process.env.NODE_ENV !== "production";
+    await seedDatabase(isDev);
+    logger.info("Database seeding checked/completed");
+  } catch (seedErr) {
+    logger.error({ err: seedErr }, "Database seeding failed");
   }
 
   startScheduler();

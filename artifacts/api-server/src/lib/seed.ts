@@ -81,46 +81,50 @@ function randomDate(daysBack: number): Date {
   return new Date(now.getTime() - offset * 24 * 60 * 60 * 1000);
 }
 
-export async function seedDatabase(): Promise<void> {
+export async function seedDatabase(seedMockData: boolean = true): Promise<void> {
   const [attackCount] = await db.select({ value: count() }).from(attackTypesTable);
-  if (attackCount.value > 0) {
-    logger.info("Database already seeded, skipping");
-    return;
+  if (attackCount.value === 0) {
+    logger.info("Seeding attack types...");
+    for (const seed of ATTACK_TYPE_SEEDS) {
+      const firstSeen = new Date();
+      firstSeen.setMonth(firstSeen.getMonth() - seed.monthsAgo);
+
+      await db.insert(attackTypesTable).values({
+        name: seed.name,
+        description: seed.description,
+        firstSeen,
+        sampleCount: Math.floor(Math.random() * 500) + 50,
+        simulationHtml: seed.simulationHtml,
+      });
+    }
+    logger.info("Attack types seeded.");
+  } else {
+    logger.info("Attack types already seeded, skipping.");
   }
 
-  logger.info("Seeding database...");
+  if (seedMockData) {
+    const [phishCount] = await db.select({ value: count() }).from(phishEntriesTable);
+    if (phishCount.value === 0) {
+      logger.info("Seeding mock phish entries...");
+      const attackTypeNames = ATTACK_TYPE_SEEDS.map((s) => s.name);
 
-  for (const seed of ATTACK_TYPE_SEEDS) {
-    const firstSeen = new Date();
-    firstSeen.setMonth(firstSeen.getMonth() - seed.monthsAgo);
+      for (let i = 0; i < 50; i++) {
+        const domain = randomElement(FAKE_DOMAINS);
+        const path = `/${Math.random().toString(36).substring(2, 8)}`;
+        const protocol = Math.random() > 0.3 ? "hxxps" : "hxxp";
 
-    await db.insert(attackTypesTable).values({
-      name: seed.name,
-      description: seed.description,
-      firstSeen,
-      sampleCount: Math.floor(Math.random() * 500) + 50,
-      simulationHtml: seed.simulationHtml,
-    });
+        await db.insert(phishEntriesTable).values({
+          url: `${protocol}://${domain}${path}`,
+          source: randomElement(SOURCES),
+          attackType: randomElement(attackTypeNames),
+          sector: randomElement(SECTORS),
+          country: randomElement(COUNTRIES),
+          dateDetected: randomDate(30),
+          confidenceScore: Math.round((Math.random() * 0.5 + 0.5) * 100) / 100,
+          isActive: Math.random() > 0.1,
+        });
+      }
+      logger.info("Mock phish entries seeded.");
+    }
   }
-
-  const attackTypeNames = ATTACK_TYPE_SEEDS.map(s => s.name);
-
-  for (let i = 0; i < 50; i++) {
-    const domain = randomElement(FAKE_DOMAINS);
-    const path = `/${Math.random().toString(36).substring(2, 8)}`;
-    const protocol = Math.random() > 0.3 ? "hxxps" : "hxxp";
-
-    await db.insert(phishEntriesTable).values({
-      url: `${protocol}://${domain}${path}`,
-      source: randomElement(SOURCES),
-      attackType: randomElement(attackTypeNames),
-      sector: randomElement(SECTORS),
-      country: randomElement(COUNTRIES),
-      dateDetected: randomDate(30),
-      confidenceScore: Math.round((Math.random() * 0.5 + 0.5) * 100) / 100,
-      isActive: Math.random() > 0.1,
-    });
-  }
-
-  logger.info("Database seeded with attack types and 50 phish entries");
 }
