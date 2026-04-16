@@ -104,7 +104,7 @@ The API must be live before the frontend, so the frontend knows where to send re
    | **Name** | `watchphish-api` |
    | **Region** | Same region as your Supabase project |
    | **Runtime** | **Node** |
-   | **Build Command** | `pnpm install && pnpm --filter @workspace/db run push --force && pnpm --filter @workspace/api-server run build` |
+   | **Build Command** | `pnpm install --no-frozen-lockfile && pnpm --filter @workspace/db run push --force && pnpm --filter @workspace/api-server run build` |
    | **Start Command** | `node artifacts/api-server/dist/index.mjs` |
    | **Plan** | **Free** |
 
@@ -136,62 +136,9 @@ You should see: `{"status":"ok"}`
 
 ---
 
-## Part 4: Configure the Frontend for Production
+## Part 4: Deploy the Frontend on Vercel
 
-Before deploying to Vercel, you need to tell the frontend where the API lives.
-
-### Step 1: Edit `artifacts/phishwatch/src/App.tsx`
-
-Open the file and replace its contents with:
-
-```tsx
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { setBaseUrl } from "@workspace/api-client-react";
-import Home from "@/pages/Home";
-
-setBaseUrl(import.meta.env.VITE_API_URL || "");
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-});
-
-function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <Home />
-    </QueryClientProvider>
-  );
-}
-
-export default App;
-```
-
-### Step 2: Create `.env.production`
-
-Create a new file at `artifacts/phishwatch/.env.production`:
-
-```
-VITE_API_URL=https://watchphish-api.onrender.com
-```
-
-Replace the URL with your actual Render API URL from Part 3.
-
-### Step 3: Commit and push these changes
-
-```bash
-git add .
-git commit -m "Configure API URL for production"
-git push
-```
-
----
-
-## Part 5: Deploy the Frontend on Vercel
+The frontend code is already configured to read the API URL from an environment variable. No code changes needed — just set the variable in Vercel's dashboard.
 
 ### Step 1: Import to Vercel
 
@@ -202,11 +149,11 @@ git push
 
    | Setting | Value |
    |---------|-------|
-   | **Framework Preset** | Vite |
-   | **Root Directory** | `artifacts/phishwatch` |
-   | **Build Command** | `cd ../.. && pnpm install && pnpm --filter @workspace/phishwatch run build` |
-   | **Output Directory** | `dist/public` |
-   | **Install Command** | `pnpm install` |
+   | **Framework Preset** | Other |
+   | **Root Directory** | *(leave empty — use project root)* |
+   | **Build Command** | `pnpm --filter @workspace/phishwatch run build` |
+   | **Output Directory** | `artifacts/phishwatch/dist/public` |
+   | **Install Command** | `pnpm install --no-frozen-lockfile` |
 
 5. Expand **"Environment Variables"** and add:
 
@@ -235,7 +182,7 @@ git push
 
 ---
 
-## Part 6: Update CORS on the API Server
+## Part 5: Update CORS on the API Server
 
 Your API server needs to accept requests from your Vercel domain.
 
