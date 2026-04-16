@@ -25,7 +25,11 @@ app.use(
     },
   }),
 );
-app.use(cors());
+app.use(cors({
+  origin: [
+    "https://watchphish.vercel.app"   // Your Vercel URL
+  ],
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
