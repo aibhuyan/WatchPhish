@@ -1,0 +1,724 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: PhishWatch API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: phishing
+    description: Phishing intelligence operations
+  - name: enrichment
+    description: Enrichment operations
+  - name: brands
+    description: Brand monitoring and certificate alerts
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /stats:
+    get:
+      operationId: getStats
+      tags: [phishing]
+      summary: Get dashboard statistics
+      parameters:
+        - name: sector
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+  /attacks:
+    get:
+      operationId: getAttacks
+      tags: [phishing]
+      summary: Get all attack types
+      responses:
+        "200":
+          description: List of attack types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttackType"
+  /threat/{id}:
+    get:
+      operationId: getThreatDetail
+      tags: [phishing]
+      summary: Get full threat entry data
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Full threat detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreatDetail"
+        "400":
+          description: Invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /threat/{id}/related:
+    get:
+      operationId: getThreatRelated
+      tags: [phishing]
+      summary: Get related threats sharing infrastructure
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Related threat entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RelatedThreat"
+        "400":
+          description: Invalid ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /feed:
+    get:
+      operationId: getFeed
+      tags: [phishing]
+      summary: Get latest phishing entries
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: sector
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Latest phishing entries with pagination
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhishFeedPage"
+  /new-techniques:
+    get:
+      operationId: getNewTechniques
+      tags: [phishing]
+      summary: Get newly detected attack techniques
+      responses:
+        "200":
+          description: Attack types first seen in the last 30 days
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttackType"
+  /high-confidence:
+    get:
+      operationId: getHighConfidence
+      tags: [phishing]
+      summary: Get high-confidence threats confirmed by multiple sources
+      responses:
+        "200":
+          description: High-confidence threat entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PhishFeedEntry"
+  /refresh:
+    post:
+      operationId: triggerRefresh
+      tags: [phishing]
+      summary: Manually trigger data collectors
+      responses:
+        "200":
+          description: Refresh triggered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+  /enrich:
+    post:
+      operationId: triggerEnrich
+      tags: [enrichment]
+      summary: Manually trigger enrichment
+      responses:
+        "200":
+          description: Enrichment triggered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+  /test-enricher:
+    post:
+      operationId: testEnricher
+      tags: [enrichment]
+      summary: Test an enrichment API connection
+      parameters:
+        - name: source
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [virustotal]
+      responses:
+        "200":
+          description: Test result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnricherTestResult"
+  /brands:
+    get:
+      operationId: getBrands
+      tags: [brands]
+      summary: List brand watchlist
+      responses:
+        "200":
+          description: List of watched brands
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Brand"
+    post:
+      operationId: addBrand
+      tags: [brands]
+      summary: Add a brand to the watchlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                brandName:
+                  type: string
+              required:
+                - brandName
+      responses:
+        "200":
+          description: Brand added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Brand"
+  /brands/{id}:
+    delete:
+      operationId: deleteBrand
+      tags: [brands]
+      summary: Remove a brand from the watchlist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Brand removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+  /cert-alerts:
+    get:
+      operationId: getCertAlerts
+      tags: [brands]
+      summary: List certificate alerts
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: dismissed
+          in: query
+          schema:
+            type: string
+            default: "false"
+      responses:
+        "200":
+          description: Certificate alerts with pagination
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CertAlertList"
+  /cert-alerts/{id}/dismiss:
+    post:
+      operationId: dismissCertAlert
+      tags: [brands]
+      summary: Dismiss a certificate alert
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Alert dismissed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+  /cert-alerts/count:
+    get:
+      operationId: getCertAlertCount
+      tags: [brands]
+      summary: Get undismissed alert count
+      responses:
+        "200":
+          description: Alert count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                required:
+                  - count
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    DashboardStats:
+      type: object
+      properties:
+        totalEntries:
+          type: integer
+        newToday:
+          type: integer
+        attackTypesCount:
+          type: integer
+        countriesCount:
+          type: integer
+        attackTypeBreakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              count:
+                type: integer
+            required: [type, count]
+        sectorBreakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              sector:
+                type: string
+              count:
+                type: integer
+            required: [sector, count]
+        dailyCounts:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              count:
+                type: integer
+            required: [date, count]
+        topSources:
+          type: array
+          items:
+            type: object
+            properties:
+              source:
+                type: string
+              count:
+                type: integer
+            required: [source, count]
+        enrichment:
+          $ref: "#/components/schemas/EnrichmentStats"
+      required:
+        - totalEntries
+        - newToday
+        - attackTypesCount
+        - countriesCount
+        - attackTypeBreakdown
+        - sectorBreakdown
+        - dailyCounts
+        - topSources
+        - enrichment
+    EnrichmentStats:
+      type: object
+      properties:
+        totalEnriched:
+          type: integer
+        avgVtDetectionRatio:
+          type: number
+          nullable: true
+        topCountries:
+          type: array
+          items:
+            type: object
+            properties:
+              country:
+                type: string
+              count:
+                type: integer
+            required: [country, count]
+        apisActive:
+          type: array
+          items:
+            type: string
+        recentlyRegisteredCount:
+          type: integer
+      required:
+        - totalEnriched
+        - avgVtDetectionRatio
+        - topCountries
+        - apisActive
+        - recentlyRegisteredCount
+    AttackType:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        firstSeen:
+          type: string
+        sampleCount:
+          type: integer
+        simulationHtml:
+          type: string
+          nullable: true
+        avgVtRatio:
+          type: number
+          nullable: true
+      required:
+        - id
+        - name
+        - description
+        - firstSeen
+        - sampleCount
+    PhishFeedPage:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/PhishFeedEntry"
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+      required:
+        - entries
+        - total
+        - limit
+        - offset
+    PhishFeedEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        sanitizedUrl:
+          type: string
+        source:
+          type: string
+        attackType:
+          type: string
+        sector:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        dateDetected:
+          type: string
+        confidenceScore:
+          type: number
+        isActive:
+          type: boolean
+        vtDetectionRatio:
+          type: string
+          nullable: true
+        vtMaliciousVotes:
+          type: integer
+          nullable: true
+        enrichedAt:
+          type: string
+          nullable: true
+        enrichmentSource:
+          type: string
+          nullable: true
+        domainAge:
+          type: integer
+          nullable: true
+        rdapRegistrar:
+          type: string
+          nullable: true
+        rdapRegisteredDate:
+          type: string
+          nullable: true
+      required:
+        - id
+        - sanitizedUrl
+        - source
+        - attackType
+        - dateDetected
+        - confidenceScore
+        - isActive
+    ActionResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+        - message
+    EnricherTestResult:
+      type: object
+      properties:
+        source:
+          type: string
+        configured:
+          type: boolean
+        success:
+          type: boolean
+        message:
+          type: string
+        responseStatus:
+          type: integer
+          nullable: true
+      required:
+        - source
+        - configured
+        - success
+        - message
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    ThreatDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
+        source:
+          type: string
+        attackType:
+          type: string
+        sector:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        dateDetected:
+          type: string
+        confidenceScore:
+          type: number
+        isActive:
+          type: boolean
+        vtDetectionRatio:
+          type: string
+          nullable: true
+        vtMaliciousVotes:
+          type: integer
+          nullable: true
+        vtHarmlessVotes:
+          type: integer
+          nullable: true
+        vtCategories:
+          type: string
+          nullable: true
+        vtCountry:
+          type: string
+          nullable: true
+        vtRegistrar:
+          type: string
+          nullable: true
+        enrichedAt:
+          type: string
+          nullable: true
+        enrichmentSource:
+          type: string
+          nullable: true
+      required:
+        - id
+        - url
+        - source
+        - attackType
+        - dateDetected
+        - confidenceScore
+        - isActive
+    RelatedThreat:
+      type: object
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
+        source:
+          type: string
+        attackType:
+          type: string
+        sector:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        dateDetected:
+          type: string
+        vtDetectionRatio:
+          type: string
+          nullable: true
+        vtRegistrar:
+          type: string
+          nullable: true
+        vtCountry:
+          type: string
+          nullable: true
+        matchReason:
+          type: string
+      required:
+        - id
+        - url
+        - source
+        - attackType
+        - dateDetected
+        - matchReason
+    Brand:
+      type: object
+      properties:
+        id:
+          type: integer
+        brandName:
+          type: string
+        addedAt:
+          type: string
+      required:
+        - id
+        - brandName
+        - addedAt
+    CertAlert:
+      type: object
+      properties:
+        id:
+          type: integer
+        domain:
+          type: string
+        matchedBrand:
+          type: string
+        matchType:
+          type: string
+        matchScore:
+          type: number
+          nullable: true
+        certIssuer:
+          type: string
+          nullable: true
+        certIssuedAt:
+          type: string
+          nullable: true
+        detectedAt:
+          type: string
+        dismissed:
+          type: boolean
+      required:
+        - id
+        - domain
+        - matchedBrand
+        - matchType
+        - detectedAt
+        - dismissed
+    CertAlertList:
+      type: object
+      properties:
+        alerts:
+          type: array
+          items:
+            $ref: "#/components/schemas/CertAlert"
+        total:
+          type: integer
+        undismissedCount:
+          type: integer
+      required:
+        - alerts
+        - total
+        - undismissedCount

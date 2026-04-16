@@ -1,0 +1,172 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: 'Inter', "Segoe UI", sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --color-background: var(--cd-page-bg);
+  --color-foreground: var(--cd-black);
+  --color-card: var(--cd-white);
+  --color-card-foreground: var(--cd-black);
+  --color-border: var(--cd-primary-lighter);
+  --color-input: var(--cd-primary-lighter);
+  --color-primary: var(--cd-primary);
+  --color-primary-foreground: var(--cd-white);
+  --color-muted: var(--cd-gray-light);
+  --color-muted-foreground: var(--cd-gray);
+  --color-accent: var(--cd-primary-surface);
+  --color-accent-foreground: var(--cd-black);
+  --color-destructive: var(--cd-red-button);
+  --color-destructive-foreground: var(--cd-white);
+  --color-ring: var(--cd-primary);
+  --color-secondary: var(--cd-primary-light);
+  --color-secondary-foreground: var(--cd-black);
+  --color-surface: var(--cd-primary-ghost);
+  --color-divider: var(--cd-gray-light);
+  --color-gray-dark: var(--cd-gray-dark);
+  --color-gray-surface: var(--cd-gray-surface);
+
+  --color-success: var(--cd-green-dark);
+  --color-success-foreground: var(--cd-white);
+
+  --color-warning: var(--cd-yellow-dark);
+  --color-warning-foreground: var(--cd-white);
+
+  --color-danger: var(--cd-red-button);
+  --color-danger-foreground: var(--cd-white);
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+}
+
+:root {
+  --cd-primary: #2E86C1;
+  --cd-primary-hover: #1B6CA8;
+  --cd-primary-light: #B8DCF0;
+  --cd-primary-lighter: #E1F0FA;
+  --cd-primary-surface: #F0F7FC;
+  --cd-primary-ghost: #FAFCFE;
+
+  --cd-black: #333333;
+  --cd-gray-dark: #4F4E56;
+  --cd-gray: #808080;
+  --cd-gray-mid: #84888C;
+  --cd-gray-light: #F4F4F4;
+  --cd-gray-surface: #F8F8F8;
+  --cd-page-bg: #f4f3ee;
+  --cd-white: #FFFFFF;
+
+  --cd-green: #91D79B;
+  --cd-green-dark: #065F46;
+  --cd-green-bg: #D7F4E1;
+  --cd-yellow: #F9CC7A;
+  --cd-yellow-dark: #92400E;
+  --cd-yellow-bg: #FEF3C7;
+  --cd-red: #FF3F3F;
+  --cd-red-dark: #C90C39;
+  --cd-red-bg: #FFF5F5;
+  --cd-red-button: #DF2020;
+  --cd-teal: #B2FFF1;
+
+  --cd-border: rgba(0, 0, 0, 0.1);
+
+  --cd-shadow-card: rgba(46, 134, 193, 0.2) 0px 2px 8px 0px;
+  --cd-shadow-button: rgba(0, 0, 0, 0.016) 0px 2px 0px 0px;
+  --cd-shadow-dropdown: 0 3px 6px -4px rgba(0,0,0,0.12), 0 6px 16px 0 rgba(0,0,0,0.08), 0 9px 28px 8px rgba(0,0,0,0.05);
+
+  --cd-transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+  --chart-bg: #FFFFFF;
+  --chart-border: #E1F0FA;
+  --chart-text: #333333;
+  --chart-grid: #E1F0FA;
+  --chart-axis: #808080;
+
+  scrollbar-color: #EFEFF2 transparent;
+  scrollbar-width: thin;
+}
+
+:root.dark {
+  --cd-primary: #5BA3D9;
+  --cd-primary-hover: #7DBDE8;
+  --cd-primary-light: #1E3A5F;
+  --cd-primary-lighter: #1A2D45;
+  --cd-primary-surface: #141E2E;
+  --cd-primary-ghost: #111927;
+
+  --cd-black: #E8EAED;
+  --cd-gray-dark: #B0B3B8;
+  --cd-gray: #8A8D93;
+  --cd-gray-mid: #6B6E75;
+  --cd-gray-light: #1E2733;
+  --cd-gray-surface: #182230;
+  --cd-page-bg: #0e1525;
+  --cd-white: #151E2B;
+
+  --cd-green-dark: #34D399;
+  --cd-yellow-dark: #FBBF24;
+  --cd-red-button: #EF4444;
+
+  --cd-border: rgba(255, 255, 255, 0.08);
+
+  --cd-shadow-card: rgba(0, 0, 0, 0.4) 0px 2px 8px 0px;
+
+  --chart-bg: #151E2B;
+  --chart-border: #1A2D45;
+  --chart-text: #E8EAED;
+  --chart-grid: #1A2D45;
+  --chart-axis: #8A8D93;
+
+  scrollbar-color: #1E2733 transparent;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/20;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  * {
+    @apply border-border;
+  }
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: #EFEFF2;
+  border-radius: 3px;
+}
+.dark *::-webkit-scrollbar-thumb {
+  background: #1E2733;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/80 backdrop-blur-xl border border-border shadow-sm;
+  }
+  .dark .glass-panel {
+    @apply bg-[#151E2B]/80;
+  }
+
+  .text-glow {
+    text-shadow: none;
+  }
+}
