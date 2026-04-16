@@ -147,9 +147,9 @@ pnpm --filter @workspace/phishwatch run dev
 
 The frontend runs on `http://localhost:5173` and the API on `http://localhost:3000`.
 
-## Screenshots
+## Visit Live URL
 
-The dashboard displays real-time phishing intelligence with threat distribution charts, daily volume trends, and enrichment statistics. The interactive simulations present realistic phishing scenarios across eight different attack types.
+https://watchphish.aibhuyan.com
 
 ## License
 

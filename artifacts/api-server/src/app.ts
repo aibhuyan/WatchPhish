@@ -27,7 +27,8 @@ app.use(
 );
 app.use(cors({
   origin: [
-    "https://watchphish.vercel.app"   // Your Vercel URL
+    "https://watchphish.vercel.app",
+    "https://watchphish.aibhuyan.com"
   ],
 }));
 app.use(express.json());
