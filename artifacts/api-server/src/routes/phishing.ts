@@ -34,7 +34,7 @@ router.get("/stats", async (req, res) => {
       .where(sectorCondition ? and(gte(phishEntriesTable.dateDetected, today), sectorCondition) : gte(phishEntriesTable.dateDetected, today));
 
     const attackTypesCount = await db.select({ value: sql<number>`count(distinct attack_type)::int` }).from(phishEntriesTable).where(sectorCondition);
-    const countriesCount = await db.select({ value: sql<number>`count(distinct country)::int` }).from(phishEntriesTable).where(sectorCondition);
+    const countriesCount = await db.select({ value: sql<number>`count(distinct coalesce(country, vt_country))::int` }).from(phishEntriesTable).where(sectorCondition);
 
     const attackTypeBreakdown = await db.select({
       type: phishEntriesTable.attackType,
@@ -243,6 +243,7 @@ router.get("/attacks", async (_req, res) => {
 
     const enrichmentStats = await db.select({
       attackType: phishEntriesTable.attackType,
+      realSampleCount: sql<number>`count(*)::int`,
       avgVt: sql<number>`avg(
         case when vt_detection_ratio is not null and position('/' in vt_detection_ratio) > 0
         then split_part(vt_detection_ratio, '/', 1)::float / nullif(split_part(vt_detection_ratio, '/', 2)::float, 0)
@@ -262,7 +263,7 @@ router.get("/attacks", async (_req, res) => {
           name: a.name,
           description: a.description,
           firstSeen: a.firstSeen.toISOString(),
-          sampleCount: a.sampleCount,
+          sampleCount: stats?.realSampleCount || 0,
           simulationHtml: a.simulationHtml,
           avgVtRatio: stats?.avgVt ? Math.round(stats.avgVt * 100) / 100 : null,
         };

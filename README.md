@@ -1,10 +1,11 @@
 # WatchPhish
 
-A full-stack phishing intelligence and interactive simulation platform. Collects live threat data from multiple feeds, enriches it with domain intelligence, and provides interactive phishing simulations for security awareness training.
+A phishing intelligence and simulation platform. Collects live threat data from multiple feeds, enriches it with domain intelligence, and provides phishing simulations for security awareness.
 
 ## Features
 
 ### Live Threat Intelligence
+
 - **Multi-source data collection** from OpenPhish, URLhaus, PhishTank, and ThreatFox
 - **VirusTotal enrichment** with detection ratios and scan results
 - **RDAP domain-age lookups** to identify newly registered phishing domains
@@ -12,44 +13,48 @@ A full-stack phishing intelligence and interactive simulation platform. Collects
 - **Real-time dashboard** with threat distribution charts and daily volume trends
 
 ### Brand Monitor
+
 - **Certificate Transparency (CT) log scanning** via crt.sh to detect lookalike domains
 - **Typosquatting detection** for monitored brands
 - **Watchlist management** with up to 10 monitored brands
 - **Alert system** with match scoring and dismissal
 
 ### Attack Library
+
 - Catalogued attack types with descriptions, red flags, and real-world examples
 - Enrichment statistics per attack type (VirusTotal detection rates, domain age)
 
 ### Emerging Threats
+
 - Tracks newly discovered attack techniques from the last 30 days
 - Recent threat samples with enrichment data
 
-### Interactive Phishing Simulations
-Eight interactive scenarios for security awareness training:
+### Phishing Simulations
 
-| Scenario | Description |
-|----------|-------------|
-| Microsoft Login Phish | Credential harvesting via fake login page |
-| PayPal Phishing Email | Brand impersonation with urgency tactics |
-| SMS Delivery Scam | Smishing attack impersonating Posti (Finnish postal service) |
-| Invoice Fraud | Business email compromise with fake banking details |
-| QR Code Phishing | Quishing via fake corporate Wi-Fi portal |
-| AI Spear Phishing | AI-generated targeted email with social engineering |
-| Browser-in-the-Browser | Fake browser popup overlaying a legitimate site |
-| AiTM Session Hijack | Adversary-in-the-middle MFA bypass attack |
+Eight interactive scenarios for security awareness:
+
+| Scenario               | Description                                                  |
+| ---------------------- | ------------------------------------------------------------ |
+| Microsoft Login Phish  | Credential harvesting via fake login page                    |
+| PayPal Phishing Email  | Brand impersonation with urgency tactics                     |
+| SMS Delivery Scam      | Smishing attack impersonating Posti (Finnish postal service) |
+| Invoice Fraud          | Business email compromise with fake banking details          |
+| QR Code Phishing       | Quishing via fake corporate Wi-Fi portal                     |
+| AI Spear Phishing      | AI-generated targeted email with social engineering          |
+| Browser-in-the-Browser | Fake browser popup overlaying a legitimate site              |
+| AiTM Session Hijack    | Adversary-in-the-middle MFA bypass attack                    |
 
 Each simulation presents a realistic phishing mockup where users identify red flags by tapping suspicious elements. Includes hints, scoring, and educational takeaways.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 19, Vite 7, TypeScript, Tailwind CSS v4 |
-| UI | Radix UI, Framer Motion, Recharts, Lucide Icons |
-| API | Express 5, Node.js, TypeScript |
-| Database | PostgreSQL with Drizzle ORM |
-| API Spec | OpenAPI 3.1 with Zod validation |
+| Layer        | Technology                                                   |
+| ------------ | ------------------------------------------------------------ |
+| Frontend     | React 19, Vite 7, TypeScript, Tailwind CSS v4                |
+| UI           | Radix UI, Framer Motion, Recharts, Lucide Icons              |
+| API          | Express 5, Node.js, TypeScript                               |
+| Database     | PostgreSQL with Drizzle ORM                                  |
+| API Spec     | OpenAPI 3.1 with Zod validation                              |
 | Data Sources | OpenPhish, URLhaus, PhishTank, ThreatFox, VirusTotal, crt.sh |
 
 ## Project Structure
@@ -81,27 +86,25 @@ watchphish/
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/healthz` | Health check |
-| GET | `/api/stats` | Dashboard statistics and charts |
-| GET | `/api/feed` | Paginated threat feed with filtering |
-| GET | `/api/feed/:id` | Single threat entry details |
-| GET | `/api/attack-types` | Attack type catalog with stats |
-| GET | `/api/attack-types/:slug` | Single attack type details |
-| GET | `/api/emerging` | Emerging threat techniques |
-| POST | `/api/collect` | Trigger data collection |
-| POST | `/api/enrich` | Trigger VirusTotal/RDAP enrichment |
-| GET | `/api/brands` | List watched brands |
-| POST | `/api/brands` | Add brand to watchlist |
-| DELETE | `/api/brands/:id` | Remove brand from watchlist |
-| GET | `/api/cert-alerts` | Certificate transparency alerts |
-| POST | `/api/cert-alerts/:id/dismiss` | Dismiss an alert |
-| POST | `/api/ct-scan` | Trigger CT log scan |
+| Method | Endpoint                       | Description                          |
+| ------ | ------------------------------ | ------------------------------------ |
+| GET    | `/api/healthz`                 | Health check                         |
+| GET    | `/api/stats`                   | Dashboard statistics and charts      |
+| GET    | `/api/feed`                    | Paginated threat feed with filtering |
+| GET    | `/api/feed/:id`                | Single threat entry details          |
+| GET    | `/api/attack-types`            | Attack type catalog with stats       |
+| GET    | `/api/attack-types/:slug`      | Single attack type details           |
+| GET    | `/api/emerging`                | Emerging threat techniques           |
+| POST   | `/api/collect`                 | Trigger data collection              |
+| POST   | `/api/enrich`                  | Trigger VirusTotal/RDAP enrichment   |
+| GET    | `/api/brands`                  | List watched brands                  |
+| POST   | `/api/brands`                  | Add brand to watchlist               |
+| DELETE | `/api/brands/:id`              | Remove brand from watchlist          |
+| GET    | `/api/cert-alerts`             | Certificate transparency alerts      |
+| POST   | `/api/cert-alerts/:id/dismiss` | Dismiss an alert                     |
+| POST   | `/api/ct-scan`                 | Trigger CT log scan                  |
 
 ## Deployment
-
-See [DEPLOYMENT_GUIDE.md](exports/DEPLOYMENT_GUIDE.md) for complete step-by-step instructions.
 
 **Quick overview:**
 
@@ -110,23 +113,6 @@ See [DEPLOYMENT_GUIDE.md](exports/DEPLOYMENT_GUIDE.md) for complete step-by-step
 3. **Frontend**: Deploy to [Vercel](https://vercel.com) (free tier, static site hosting)
 
 All three services are permanently free.
-
-### Environment Variables
-
-**API Server (Render):**
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string from Supabase |
-| `PORT` | Yes | Server port (use `10000` on Render) |
-| `NODE_ENV` | Yes | Set to `production` |
-| `VIRUSTOTAL_API_KEY` | No | VirusTotal API key for threat enrichment |
-
-**Frontend (Vercel):**
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `VITE_API_URL` | Yes | Your Render API URL (e.g., `https://watchphish-api.onrender.com`) |
 
 ## Local Development
 
