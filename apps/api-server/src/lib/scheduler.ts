@@ -6,6 +6,7 @@ import { collectPhishTank } from "../collectors/phishtank";
 import { collectThreatFox } from "../collectors/threatfox";
 import { enrichPending, recomputeRiskScores } from "../collectors/enricher";
 import { enrichWithRdap } from "../collectors/rdap";
+import { enrichWithGeo } from "../collectors/geoip";
 import { startCertStream, runCtScan } from "./certstream";
 import { classifySector } from "./classifier";
 import { db, phishEntriesTable } from "@workspace/db";
@@ -84,6 +85,25 @@ async function runBulkRdap(): Promise<void> {
   }
 }
 
+let bulkGeoInFlight = false;
+
+async function runBulkGeo(): Promise<void> {
+  if (bulkGeoInFlight) {
+    logger.info("Bulk geo enrichment already running, skipping");
+    return;
+  }
+  bulkGeoInFlight = true;
+  logger.info("Running bulk geo/IP enrichment...");
+  try {
+    const count = await enrichWithGeo(500);
+    logger.info({ enriched: count }, "Bulk geo enrichment finished");
+  } catch (err) {
+    logger.error({ err }, "Error running bulk geo enrichment");
+  } finally {
+    bulkGeoInFlight = false;
+  }
+}
+
 export function startScheduler(): void {
   cron.schedule("0 */6 * * *", () => {
     runAllCollectors().catch(err => logger.error({ err }, "Scheduled collector run failed"));
@@ -97,7 +117,12 @@ export function startScheduler(): void {
     runCtScan().catch(err => logger.error({ err }, "Scheduled CT scan failed"));
   });
 
-  logger.info("Scheduler started: collectors every 6h, enrichment every 2h, CT scan every 4h");
+  // Geo/IP enrichment is keyless and cheap, so run it often to fill the map.
+  cron.schedule("*/30 * * * *", () => {
+    runBulkGeo().catch(err => logger.error({ err }, "Scheduled bulk geo enrichment failed"));
+  });
+
+  logger.info("Scheduler started: collectors every 6h, enrichment every 2h, CT scan every 4h, geo every 30m");
 
   setTimeout(() => {
     reclassifySectors().catch(err => logger.error({ err }, "Sector reclassification failed"));
@@ -122,6 +147,10 @@ export function startScheduler(): void {
   setTimeout(() => {
     backfillRiskScores().catch(err => logger.error({ err }, "Risk score backfill failed"));
   }, 12000);
+
+  setTimeout(() => {
+    runBulkGeo().catch(err => logger.error({ err }, "Initial bulk geo enrichment failed"));
+  }, 14000);
 }
 
 export { runAllCollectors, runEnrichment };
