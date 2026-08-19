@@ -1,0 +1,31 @@
+import app from "./app";
+import { logger } from "./lib/logger";
+import { seedDatabase } from "./lib/seed";
+import { startScheduler } from "./lib/scheduler";
+
+const rawPort = process.env["PORT"] ?? "3000";
+
+const port = Number(rawPort);
+
+if (Number.isNaN(port) || port <= 0) {
+  throw new Error(`Invalid PORT value: "${rawPort}"`);
+}
+
+app.listen(port, async (err) => {
+  if (err) {
+    logger.error({ err }, "Error listening on port");
+    process.exit(1);
+  }
+
+  logger.info({ port }, "Server listening");
+
+  try {
+    const isDev = process.env.NODE_ENV !== "production";
+    await seedDatabase(isDev);
+    logger.info("Database seeding checked/completed");
+  } catch (seedErr) {
+    logger.error({ err: seedErr }, "Database seeding failed");
+  }
+
+  startScheduler();
+});
