@@ -2,15 +2,40 @@
 
 A phishing intelligence and simulation platform. Collects live threat data from multiple feeds, enriches it with domain intelligence, and provides phishing simulations for security awareness.
 
+🔗 **Live demo:** [watchphish.aibhuyan.com](https://watchphish.aibhuyan.com)
+
+## Screenshots
+
+### Live Dashboard
+
+Real-time metrics, threat-type distribution, and a 7-day volume trend, all filterable by sector.
+
+![WatchPhish live dashboard](docs/screenshots/01-dashboard.png)
+
+### Global Threat Map & Risk Scoring
+
+Phishing hosts are geolocated onto a world map (IP → ASN), alongside a risk-level distribution and a live feed where every entry carries a composite risk badge.
+
+![Global threat map and risk distribution](docs/screenshots/02-threat-map.png)
+
+### Threat Detail — Explainable Risk Scoring
+
+Each threat gets a **0–100 risk score with a factor-by-factor breakdown**, plus IP / ASN hosting intelligence and related-infrastructure links.
+
+![Threat detail panel with risk breakdown](docs/screenshots/03-threat-detail.png)
+
 ## Features
 
 ### Live Threat Intelligence
 
 - **Multi-source data collection** from OpenPhish, URLhaus, PhishTank, and ThreatFox
+- **Composite risk score (0–100)** — an explainable score blending VirusTotal detections, urlscan verdict, domain age, detection recency, and source trust, with a per-factor breakdown
+- **urlscan.io enrichment** — page screenshots and verdicts pulled from urlscan's public search API
+- **IP geolocation + ASN** — each host resolved to a country/ASN and plotted on a world **threat map**
 - **VirusTotal enrichment** with detection ratios and scan results
 - **RDAP domain-age lookups** to identify newly registered phishing domains
 - **Sector-based filtering** (Finance, Tech, Government, Healthcare, etc.)
-- **Real-time dashboard** with threat distribution charts and daily volume trends
+- **Real-time dashboard** with threat distribution charts, a global threat map, and daily volume trends
 
 ### Brand Monitor
 
@@ -51,17 +76,17 @@ Each simulation presents a realistic phishing mockup where users identify red fl
 | Layer        | Technology                                                   |
 | ------------ | ------------------------------------------------------------ |
 | Frontend     | React 19, Vite 7, TypeScript, Tailwind CSS v4                |
-| UI           | Radix UI, Framer Motion, Recharts, Lucide Icons              |
+| UI           | Radix UI, Framer Motion, Recharts, d3-geo (world map), Lucide Icons |
 | API          | Express 5, Node.js, TypeScript                               |
 | Database     | PostgreSQL with Drizzle ORM                                  |
 | API Spec     | OpenAPI 3.1 with Zod validation                              |
-| Data Sources | OpenPhish, URLhaus, PhishTank, ThreatFox, VirusTotal, crt.sh |
+| Data Sources | OpenPhish, URLhaus, PhishTank, ThreatFox, VirusTotal, urlscan.io, ip-api.com, crt.sh |
 
 ## Project Structure
 
 ```
 watchphish/
-├── artifacts/
+├── apps/
 │   ├── phishwatch/          # Frontend (React + Vite)
 │   │   ├── src/
 │   │   │   ├── components/  # UI components
@@ -74,52 +99,45 @@ watchphish/
 │           ├── routes/      # API endpoints
 │           ├── collectors/  # Threat feed collectors
 │           └── lib/         # Server utilities
-├── lib/
+├── packages/
 │   ├── api-client-react/    # Generated API client hooks
 │   ├── api-spec/            # OpenAPI specification
 │   ├── api-zod/             # Zod validation schemas
 │   └── db/                  # Database schema (Drizzle)
-├── package.json
-├── pnpm-workspace.yaml
+├── package.json            # npm workspaces root
+├── package-lock.json
 └── tsconfig.json
 ```
 
 ## API Endpoints
 
-| Method | Endpoint                       | Description                          |
-| ------ | ------------------------------ | ------------------------------------ |
-| GET    | `/api/healthz`                 | Health check                         |
-| GET    | `/api/stats`                   | Dashboard statistics and charts      |
-| GET    | `/api/feed`                    | Paginated threat feed with filtering |
-| GET    | `/api/feed/:id`                | Single threat entry details          |
-| GET    | `/api/attack-types`            | Attack type catalog with stats       |
-| GET    | `/api/attack-types/:slug`      | Single attack type details           |
-| GET    | `/api/emerging`                | Emerging threat techniques           |
-| POST   | `/api/collect`                 | Trigger data collection              |
-| POST   | `/api/enrich`                  | Trigger VirusTotal/RDAP enrichment   |
-| GET    | `/api/brands`                  | List watched brands                  |
-| POST   | `/api/brands`                  | Add brand to watchlist               |
-| DELETE | `/api/brands/:id`              | Remove brand from watchlist          |
-| GET    | `/api/cert-alerts`             | Certificate transparency alerts      |
-| POST   | `/api/cert-alerts/:id/dismiss` | Dismiss an alert                     |
-| POST   | `/api/ct-scan`                 | Trigger CT log scan                  |
-
-## Deployment
-
-**Quick overview:**
-
-1. **Database**: Create a free PostgreSQL on [Supabase](https://supabase.com) (500 MB, no expiration)
-2. **API Server**: Deploy to [Render](https://render.com) (free tier, auto-deploys from GitHub)
-3. **Frontend**: Deploy to [Vercel](https://vercel.com) (free tier, static site hosting)
-
-All three services are permanently free.
+| Method | Endpoint                       | Description                                         |
+| ------ | ------------------------------ | --------------------------------------------------- |
+| GET    | `/api/healthz`                 | Health check                                        |
+| GET    | `/api/stats`                   | Dashboard stats, charts, geo & risk breakdown       |
+| GET    | `/api/feed`                    | Paginated threat feed (sector filter)               |
+| GET    | `/api/threat/:id`              | Single threat detail (risk, screenshot, geo/ASN)    |
+| GET    | `/api/threat/:id/related`      | Related threats sharing infrastructure              |
+| GET    | `/api/attacks`                 | Attack type catalog with enrichment stats           |
+| GET    | `/api/new-techniques`          | Emerging techniques (first seen in last 30 days)    |
+| GET    | `/api/high-confidence`         | High-confidence recent threats                      |
+| POST   | `/api/refresh`                 | Trigger data collectors                             |
+| POST   | `/api/enrich`                  | Trigger enrichment (VirusTotal / RDAP / urlscan / geo) |
+| POST   | `/api/test-enricher`           | Test an enricher connection                         |
+| GET    | `/api/brands`                  | List watched brands                                 |
+| POST   | `/api/brands`                  | Add brand to watchlist                              |
+| DELETE | `/api/brands/:id`              | Remove brand from watchlist                         |
+| GET    | `/api/cert-alerts`             | Certificate Transparency alerts                     |
+| GET    | `/api/cert-alerts/count`       | Undismissed alert count                             |
+| POST   | `/api/cert-alerts/:id/dismiss` | Dismiss an alert                                    |
+| POST   | `/api/ct-scan`                 | Trigger a CT log scan                               |
 
 ## Local Development
 
 ### Prerequisites
 
 - Node.js 20+
-- pnpm 9+
+- npm 10+
 - PostgreSQL database
 
 ### Setup
@@ -130,26 +148,30 @@ git clone https://github.com/YOUR_USERNAME/watchphish.git
 cd watchphish
 
 # Install dependencies
-pnpm install
+npm install
 
 # Set up environment variables
 export DATABASE_URL="postgresql://user:password@localhost:5432/watchphish"
 
 # Push database schema
-pnpm --filter @workspace/db run push --force
+npm run push-force --workspace @workspace/db
 
 # Start the API server
-pnpm --filter @workspace/api-server run dev
+npm run dev --workspace @workspace/api-server
 
 # In another terminal, start the frontend
-pnpm --filter @workspace/phishwatch run dev
+npm run dev --workspace @workspace/phishwatch
 ```
 
 The frontend runs on `http://localhost:5173` and the API on `http://localhost:3000`.
 
-## Visit Live URL
+### Optional enrichment keys
 
-https://watchphish.aibhuyan.com
+Every enricher degrades gracefully when unconfigured — the app runs without any of these:
+
+- `VIRUSTOTAL_API_KEY` — enables VirusTotal detection ratios (the heaviest risk-score factor).
+- `URLSCAN_API_KEY` — raises urlscan.io rate limits; screenshots still work without it via the public search API.
+- IP geolocation (ip-api.com) and RDAP domain-age lookups need no key.
 
 ## License
 
