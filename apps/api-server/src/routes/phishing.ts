@@ -34,7 +34,7 @@ router.get("/stats", async (req, res) => {
       .where(sectorCondition ? and(gte(phishEntriesTable.dateDetected, today), sectorCondition) : gte(phishEntriesTable.dateDetected, today));
 
     const attackTypesCount = await db.select({ value: sql<number>`count(distinct attack_type)::int` }).from(phishEntriesTable).where(sectorCondition);
-    const countriesCount = await db.select({ value: sql<number>`count(distinct coalesce(country, vt_country))::int` }).from(phishEntriesTable).where(sectorCondition);
+    const countriesCount = await db.select({ value: sql<number>`count(distinct coalesce(country, vt_country, geo_country_code))::int` }).from(phishEntriesTable).where(sectorCondition);
 
     const attackTypeBreakdown = await db.select({
       type: phishEntriesTable.attackType,
