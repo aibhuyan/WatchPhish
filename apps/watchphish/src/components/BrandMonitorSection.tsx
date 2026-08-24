@@ -8,6 +8,7 @@ import {
   getGetBrandsQueryKey,
   getGetCertAlertsQueryKey,
   getGetCertAlertCountQueryKey,
+  customFetch,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -101,7 +102,7 @@ export function BrandMonitorSection() {
   const handleCtScan = async () => {
     setScanning(true);
     try {
-      await fetch(`${import.meta.env.BASE_URL}api/ct-scan`, { method: "POST" });
+      await customFetch("/api/ct-scan", { method: "POST" });
       setTimeout(() => {
         invalidateAll();
         setScanning(false);

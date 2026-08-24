@@ -87,7 +87,7 @@ Each simulation presents a realistic phishing mockup where users identify red fl
 ```
 watchphish/
 ├── apps/
-│   ├── phishwatch/          # Frontend (React + Vite)
+│   ├── watchphish/          # Frontend (React + Vite)
 │   │   ├── src/
 │   │   │   ├── components/  # UI components
 │   │   │   ├── hooks/       # Custom React hooks
@@ -110,6 +110,8 @@ watchphish/
 ```
 
 ## API Endpoints
+
+> **Note:** The API server is not currently hosted anywhere. The [live demo](https://watchphish.aibhuyan.com) serves only the static frontend, so these endpoints are **not reachable at the live URL** — they return `404`. Run the API locally (see [Local Development](#local-development)) to exercise them.
 
 | Method | Endpoint                       | Description                                         |
 | ------ | ------------------------------ | --------------------------------------------------- |
@@ -160,7 +162,7 @@ npm run push-force --workspace @workspace/db
 npm run dev --workspace @workspace/api-server
 
 # In another terminal, start the frontend
-npm run dev --workspace @workspace/phishwatch
+npm run dev --workspace @workspace/watchphish
 ```
 
 The frontend runs on `http://localhost:5173` and the API on `http://localhost:3000`.

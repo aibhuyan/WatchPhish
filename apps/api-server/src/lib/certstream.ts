@@ -310,7 +310,7 @@ export async function scanCrtSh(brands: string[]): Promise<number> {
         
         const response = await fetch(url, {
           signal: AbortSignal.timeout(20000),
-          headers: { 'User-Agent': 'PhishWatch/1.0' },
+          headers: { 'User-Agent': 'WatchPhish/1.0' },
         });
         
         if (!response.ok) {
