@@ -8,13 +8,21 @@ import { cn } from "@/lib/utils";
 import { Activity, ShieldAlert, Globe, Zap, RefreshCw, Filter, Fish, Bug, ShieldCheck, Skull, Clock, ChevronLeft, ChevronRight, Gauge } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, parseISO } from "date-fns";
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { ThreatDetailPanel } from "./ThreatDetailPanel";
 import { RiskBadge } from "./RiskBadge";
 import { useUrlSector } from "@/hooks/useUrlSector";
 
 const WorldThreatMap = lazy(() => import("./WorldThreatMap"));
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+// After triggering a refresh, collectors run in the background on the server, so
+// the freshly collected rows are not available immediately. Poll the feed a few
+// times to pick them up, stopping early once the total grows.
+const REFRESH_POLL_ATTEMPTS = 10;
+const REFRESH_POLL_INTERVAL_MS = 3000;
 
 const COLORS = [
   '#2E86C1', '#27AE60', '#E67E22', '#DF2020', '#8E44AD',
@@ -73,8 +81,17 @@ export function DashboardSection() {
   const totalEntries = feedData?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalEntries / pageSize));
   const { mutate: refresh, isPending } = useTriggerRefresh();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const pollAbortRef = useRef(false);
   const [selectedThreatId, setSelectedThreatId] = useState<number | null>(null);
   const chart = useChartColors();
+
+  // Cancel any in-flight poll if the component unmounts.
+  useEffect(() => {
+    return () => {
+      pollAbortRef.current = true;
+    };
+  }, []);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -87,11 +104,30 @@ export function DashboardSection() {
   }, [totalPages, currentPage]);
 
   const handleRefresh = () => {
+    if (isPending || isRefreshing) return;
+
+    const baselineTotal = feedData?.total ?? 0;
+    pollAbortRef.current = false;
+    setIsRefreshing(true);
+
     refresh(undefined, {
-      onSuccess: () => {
-        refetchStats();
-        refetchFeed();
-      }
+      onSuccess: async () => {
+        // Collection runs in the background server-side; poll until new rows
+        // appear (total grows) or we give up after the max attempts.
+        for (let attempt = 0; attempt < REFRESH_POLL_ATTEMPTS; attempt++) {
+          await sleep(REFRESH_POLL_INTERVAL_MS);
+          if (pollAbortRef.current) return;
+
+          const [, feedResult] = await Promise.all([refetchStats(), refetchFeed()]);
+          const newTotal = feedResult.data?.total ?? baselineTotal;
+          if (newTotal > baselineTotal) break;
+        }
+
+        if (!pollAbortRef.current) setIsRefreshing(false);
+      },
+      onError: () => {
+        setIsRefreshing(false);
+      },
     });
   };
 
@@ -149,9 +185,9 @@ export function DashboardSection() {
               ))}
             </select>
           </div>
-          <Button onClick={handleRefresh} disabled={isPending || statsLoading} variant="outline" className="border-primary/50 text-primary hover:bg-primary/10">
-            <RefreshCw className={cn("w-4 h-4 mr-2", (isPending || statsLoading) && "animate-spin")} />
-            Refresh Data
+          <Button onClick={handleRefresh} disabled={isPending || isRefreshing || statsLoading} variant="outline" className="border-primary/50 text-primary hover:bg-primary/10">
+            <RefreshCw className={cn("w-4 h-4 mr-2", (isPending || isRefreshing) && "animate-spin")} />
+            {isPending || isRefreshing ? "Refreshing…" : "Refresh Data"}
           </Button>
         </div>
       </div>
