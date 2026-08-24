@@ -174,7 +174,3 @@ Every enricher degrades gracefully when unconfigured — the app runs without an
 - `VIRUSTOTAL_API_KEY` — enables VirusTotal detection ratios (the heaviest risk-score factor).
 - `URLSCAN_API_KEY` — raises urlscan.io rate limits; screenshots still work without it via the public search API.
 - IP geolocation (ip-api.com) and RDAP domain-age lookups need no key.
-
-## License
-
-MIT
